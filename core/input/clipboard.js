@@ -21,6 +21,7 @@ export default class Clipboard extends EventTargetMixin {
         try {
             const text = await navigator.clipboard.readText();
             if (text !== this._clipboardText && !this._isWritingClipboard) {
+                console.log('update: ' + text);
                 this.dispatchEvent(new CustomEvent("clipboardupdate", {
                     detail: { type: "text", data: text }
                 }));
@@ -48,18 +49,20 @@ export default class Clipboard extends EventTargetMixin {
     }
 
     async write(type, data) {
-        if (!this._isClipboardAPIAvailable || !this._isGrabbed || !this._isFocused) {
+        if (!this._isClipboardAPIAvailable || !this._isGrabbed || !this._isFocused || this._isWritingClipboard) {
             return;
         }
         if (type === "text") {
             this._isWritingClipboard = true;
             try {
+                console.log('write: ' + data);
                 await navigator.clipboard.writeText(data);
             } catch (err) {
                 this.ungrab();
                 this._isClipboardAPIAvailable = false;
                 this.dispatchEvent(new CustomEvent("clipboardapifail"));
             }
+            this._clipboardText = data;
             this._isWritingClipboard = false;
         }
     }
